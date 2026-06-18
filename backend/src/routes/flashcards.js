@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { authenticate, aiRateLimit } from '../middleware/auth.js';
+import { createFlashcardSet, listFlashcardSets, getFlashcardSet, updateCardStatus, deleteFlashcardSet } from '../controllers/flashcardsController.js';
+const router = Router();
+router.use(authenticate);
+router.post('/', aiRateLimit, createFlashcardSet);
+router.get('/', listFlashcardSets);
+router.get('/:id', getFlashcardSet);
+router.patch('/:id/cards/:cardId', updateCardStatus);
+router.delete('/:id', deleteFlashcardSet);
+export default router;

@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { authenticate, aiRateLimit } from '../middleware/auth.js';
+import { createSession, listSessions, getSession, sendMessage, deleteSession } from '../controllers/chatController.js';
+const router = Router();
+router.use(authenticate);
+router.post('/sessions', createSession);
+router.get('/sessions', listSessions);
+router.get('/sessions/:id', getSession);
+router.delete('/sessions/:id', deleteSession);
+router.post('/message', aiRateLimit, sendMessage);
+export default router;

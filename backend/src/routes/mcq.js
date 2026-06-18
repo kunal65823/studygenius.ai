@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { authenticate, aiRateLimit } from '../middleware/auth.js';
+import { createMCQSet, listMCQSets, getMCQSet, deleteMCQSet } from '../controllers/mcqController.js';
+const router = Router();
+router.use(authenticate);
+router.post('/', aiRateLimit, createMCQSet);
+router.get('/', listMCQSets);
+router.get('/:id', getMCQSet);
+router.delete('/:id', deleteMCQSet);
+export default router;

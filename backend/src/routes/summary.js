@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { authenticate, aiRateLimit } from '../middleware/auth.js';
+import { createSummary, listSummaries, getSmartInsights, getELI5, deleteSummary } from '../controllers/summaryController.js';
+const router = Router();
+router.use(authenticate);
+router.post('/', aiRateLimit, createSummary);
+router.get('/note/:noteId', listSummaries);
+router.get('/insights/:noteId', aiRateLimit, getSmartInsights);
+router.get('/eli5/:noteId', aiRateLimit, getELI5);
+router.delete('/:id', deleteSummary);
+export default router;
