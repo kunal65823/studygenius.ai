@@ -20,14 +20,35 @@ import searchRoutes    from './routes/search.js';
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    'http://localhost:5173',
-  ].filter(Boolean),
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    const allowed = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ].filter(Boolean);
+    if (allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now
+    }
+  },
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200,
+};
+
+// CORS must be first
+app.use(cors(corsOptions));
+
+// Handle ALL preflight requests
+app.options('*', cors(corsOptions));
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -40,11 +61,17 @@ const limiter = rateLimit({
   legacyHeaders  : false,
   message: { error: 'Too many requests, please try again later.' },
 });
+
 app.use('/api/', limiter);
 
 app.use((req, _res, next) => {
   logger.info(`${req.method} ${req.originalUrl}`);
   next();
+});
+
+// Health check - must be before other routes
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/auth',       authRoutes);
@@ -59,10 +86,6 @@ app.use('/api/bookmarks',  bookmarkRoutes);
 app.use('/api/goals',      goalRoutes);
 app.use('/api/search',     searchRoutes);
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
@@ -75,7 +98,6 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// 0.0.0.0 is required for Railway
 app.listen(PORT, '0.0.0.0', () => {
   logger.info(`🚀 StudyGenius API running on port ${PORT}`);
 });
